@@ -1,16 +1,17 @@
 use crate::taskstats;
 use std::time::Duration;
 
+/// The taskstats representation for a task.
+/// This struct remaps commonly used `struct taskstats` fields for primarily:
+/// * Access values with rust's primitive types
+/// * Better structured organization of group of fields
+/// * Support serialization
+///
+/// There are more (but may not much interested) fields in the original
+/// `struct taskstats` and they are accessible through obtaining the original
+/// struct by `TaskStats#inner()`.
 pub struct TaskStats {
     inner: taskstats,
-    // Below are remap of commonly used `struct taskstats` fields for primarily:
-    // * Access values with rust's primitive types
-    // * Better structured organization of group of fields
-    // * Support serialization
-    //
-    // There are more (but may not much interested) fields in the original
-    // `struct taskstats` and they are accessible through obtaining the original
-    // struct by `TaskStats#inner()`.
     /// The target task ID
     pub tid: u32,
     /// Staticstics related to CPU time
@@ -162,6 +163,13 @@ impl From<taskstats> for TaskStats {
 }
 
 impl TaskStats {
+    /// Return inner representation of taskstats.
+    ///
+    /// The returned value is an instance of `struct taskstats` that was
+    /// received from kernel.
+    /// `TaskStats` remaps most of its fields into rust-friendly types and
+    /// structure, so this inner object should be referred only when the user
+    /// wants to access more information than available in remapped fields.
     pub fn inner(&self) -> taskstats {
         self.inner
     }

@@ -22,24 +22,34 @@ use std::mem;
 use std::slice;
 use thiserror::Error;
 
+/// Errors possibly returned by `Client`
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Error in netlink socket/protocol layer
     #[error("error in netlink communication with kernel: {0}")]
     Netlink(#[from] netlink::Error),
+    /// Failed to lookup family ID for taskstats
     #[error("no family id corresponding to taskstats found")]
     NoFamilyId,
+    /// Any unknown error
     #[error("unknown error: {0}")]
     Unknown(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Interface to access kernel taskstats API through the netlink socket.
 pub struct Client {
     netlink: Netlink<nl::Socket>,
     ts_family_id: u16,
 }
 
 impl Client {
+    /// Open netlink socket against kernel and create a new instance of `Client`
+    ///
+    /// # Errors
+    /// * when netlink socket initialization failed
+    /// * when kernel doesn't offer family id for taskstats
     pub fn open() -> Result<Self> {
         let netlink = Netlink::open()?;
         let ts_family_id = Self::lookup_family_id(&netlink)?;
@@ -68,6 +78,18 @@ impl Client {
         Err(Error::NoFamilyId)
     }
 
+    /// Obtain taskstats for given task ID
+    ///
+    /// # Arguments
+    /// * `tid` - Kernel task ID (could be either pid for per-task pid a.k.a tid)
+    ///
+    /// # Return
+    /// * `TaskStats` storing the target task's stats
+    ///
+    /// # Errors
+    /// * when netlink socket failed
+    /// * when kernel responded error
+    /// * when the returned data couldn't be interpreted
     pub fn pid_stats(&self, tid: u32) -> Result<TaskStats> {
         self.netlink.send_cmd(
             self.ts_family_id,

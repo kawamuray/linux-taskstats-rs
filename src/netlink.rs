@@ -63,6 +63,8 @@ mod nla {
     }
 }
 
+/// Trait abstracting netlink socket IO.
+/// This trait is only meant to replace socket implementation at unit testing.
 pub trait NlSocket {
     type Addr;
 
@@ -83,6 +85,7 @@ impl NlSocket for nl::Socket {
     }
 }
 
+/// Netlink protocol implementation specifically for taskstats querying.
 pub struct Netlink<S: NlSocket> {
     sock: S,
     remote_addr: S::Addr,
