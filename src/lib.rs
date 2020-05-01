@@ -108,7 +108,7 @@ impl Client {
                             TASKSTATS_TYPE_PID => debug!("Received TASKSTATS_TYPE_PID"),
                             TASKSTATS_TYPE_TGID => debug!("Received TASKSTATS_TYPE_TGID"),
                             TASKSTATS_TYPE_STATS => {
-                                return Ok(TaskStats::from(*inner.payload_as::<taskstats>()));
+                                return Ok(TaskStats::from(inner.payload()));
                             }
                             unknown => warn!("Skipping unknown nla_type: {}", unknown),
                         }

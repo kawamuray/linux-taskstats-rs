@@ -1,5 +1,17 @@
+use crate::c_headers;
 use crate::taskstats;
+use std::mem;
 use std::time::Duration;
+
+// https://stackoverflow.com/questions/53619695/calculating-maximum-value-of-a-set-of-constant-expressions-at-compile-time
+const fn const_max(a: usize, b: usize) -> usize {
+    [a, b][(a < b) as usize]
+}
+
+const TASKSTATS_SIZE: usize = const_max(
+    mem::size_of::<taskstats>(),
+    mem::size_of::<c_headers::taskstats>(),
+);
 
 /// The taskstats representation for a task.
 /// This struct remaps commonly used `struct taskstats` fields for primarily:
@@ -11,7 +23,7 @@ use std::time::Duration;
 /// `struct taskstats` and they are accessible through obtaining the original
 /// struct by `TaskStats#inner()`.
 pub struct TaskStats {
-    inner: taskstats,
+    inner_buf: [u8; TASKSTATS_SIZE],
     /// The target task ID
     pub tid: u32,
     /// Staticstics related to CPU time
@@ -108,8 +120,11 @@ pub struct DelayStat {
     pub delay_total: Duration,
 }
 
-impl From<taskstats> for TaskStats {
-    fn from(ts: taskstats) -> Self {
+impl From<&[u8]> for TaskStats {
+    fn from(buf: &[u8]) -> Self {
+        let mut inner_buf = [0u8; TASKSTATS_SIZE];
+        inner_buf.copy_from_slice(buf);
+        let ts = unsafe { &*(inner_buf.as_ptr() as *const _ as *const taskstats) };
         TaskStats {
             tid: ts.ac_pid,
             cpu: Cpu {
@@ -157,7 +172,7 @@ impl From<taskstats> for TaskStats {
                     delay_total: Duration::from_nanos(ts.freepages_delay_total),
                 },
             },
-            inner: ts,
+            inner_buf,
         }
     }
 }
@@ -170,7 +185,7 @@ impl TaskStats {
     /// `TaskStats` remaps most of its fields into rust-friendly types and
     /// structure, so this inner object should be referred only when the user
     /// wants to access more information than available in remapped fields.
-    pub fn inner(&self) -> taskstats {
-        self.inner
+    pub fn inner(&self) -> &taskstats {
+        unsafe { &*(self.inner_buf.as_ptr() as *const _ as *const taskstats) }
     }
 }
