@@ -22,7 +22,7 @@ fn main() {
         let ts = client.pid_stats(pid).expect("get stats");
         let printer = Printer::new(DefaultHeaderFormat::new());
         printer
-            .print_full(&mut io::stdout(), &ts)
+            .print_full(&mut io::stdout(), &[ts])
             .expect("write stdout")
     }
 }
