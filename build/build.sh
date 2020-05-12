@@ -12,4 +12,4 @@ echo "Building ..."
 docker run --rm -v $root_dir:/taskstats -v $root_dir/build/.cargo:/taskstats/.cargo taskstats-build:latest cargo build
 
 echo "Running tests ..."
-docker run --rm -v $root_dir:/taskstats -v $root_dir/build/.cargo:/taskstats/.cargo taskstats-build:latest cargo test
+docker run --rm --network host --cap-add NET_ADMIN -v $root_dir:/taskstats -v $root_dir/build/.cargo:/taskstats/.cargo taskstats-build:latest cargo test
