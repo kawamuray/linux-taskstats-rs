@@ -4,6 +4,7 @@
 
 #[allow(dead_code)]
 mod c_headers;
+pub mod format;
 mod model;
 pub(crate) mod netlink;
 pub use model::*;

@@ -8,7 +8,7 @@ const fn const_max(a: usize, b: usize) -> usize {
     [a, b][(a < b) as usize]
 }
 
-const TASKSTATS_SIZE: usize = const_max(
+pub const TASKSTATS_SIZE: usize = const_max(
     mem::size_of::<taskstats>(),
     mem::size_of::<c_headers::taskstats>(),
 );
@@ -23,7 +23,7 @@ const TASKSTATS_SIZE: usize = const_max(
 /// `struct taskstats` and they are accessible through obtaining the original
 /// struct by `TaskStats#inner()`.
 pub struct TaskStats {
-    inner_buf: [u8; TASKSTATS_SIZE],
+    pub(crate) inner_buf: [u8; TASKSTATS_SIZE],
     /// The target task ID
     pub tid: u32,
     /// Staticstics related to CPU time
