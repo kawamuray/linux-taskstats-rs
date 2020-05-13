@@ -1,8 +1,8 @@
 [build]
-target-dir = "build/target"
+target-dir = "docker-build/target"
 
 [source.crates-io]
 replace-with = "vendored-sources"
 
 [source.vendored-sources]
-directory = "build/vendor"
+directory = "docker-build/vendor"

@@ -1,5 +1,5 @@
 /target
-/build/target
-/build/vendor
+/docker-build/target
+/docker-build/vendor
 Cargo.lock
 /linux_headers
