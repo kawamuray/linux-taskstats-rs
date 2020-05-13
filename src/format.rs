@@ -88,10 +88,10 @@ impl<H: HeaderFormat> Printer<H> {
             let d = ts.delays;
             table.add_row(row![
                 l->self.header_format.format(ts.tid),
-                r->d.cpu.delay_total.as_nanos() as u64 / d.cpu.count,
-                r->d.blkio.delay_total.as_nanos() as u64 / d.blkio.count,
-                r->d.swapin.delay_total.as_nanos() as u64 / d.swapin.count,
-                r->d.freepages.delay_total.as_nanos() as u64 / d.freepages.count,
+                r->d.cpu.delay_total.as_nanos() as u64 / d.cpu.count.max(1),
+                r->d.blkio.delay_total.as_nanos() as u64 / d.blkio.count.max(1),
+                r->d.swapin.delay_total.as_nanos() as u64 / d.swapin.count.max(1),
+                r->d.freepages.delay_total.as_nanos() as u64 / d.freepages.count.max(1),
                 r->d.cpu.delay_total.as_nanos(),
                 r->d.blkio.delay_total.as_nanos(),
                 r->d.swapin.delay_total.as_nanos(),
