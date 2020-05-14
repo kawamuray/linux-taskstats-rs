@@ -1,44 +1,35 @@
 use crate::format::{HeaderFormat, Printer};
 use crate::Client;
-use clap::{App, Arg, ArgMatches};
 use env_logger;
 use std::io;
-use std::process;
 
-pub fn taskstats_app<'a, 'b>() -> App<'a, 'b> {
-    App::new("A command line interface to Linux taskstats")
-        .arg(Arg::with_name("verbose").short("v").long("verbose"))
-        .arg(Arg::with_name("show-delays").short("d").long("delay"))
-        .arg(Arg::with_name("TIDS").index(1).multiple(true))
+pub struct Config<H: HeaderFormat> {
+    pub tids: Vec<u32>,
+    pub verbose: bool,
+    pub show_delays: bool,
+    pub header_format: H,
 }
 
-pub fn taskstats_main<H: HeaderFormat>(matches: &ArgMatches, header_format: H) {
+pub fn taskstats_main<H: HeaderFormat>(config: Config<H>) {
     env_logger::init();
 
     let mut stats = Vec::new();
     let client = Client::open().expect("netlink init");
-    for pid in matches.values_of("TIDS").unwrap() {
-        let pid = match pid.parse::<u32>() {
-            Ok(pid) => pid,
-            Err(_) => {
-                eprintln!("Invalid PID: {}", pid);
-                process::exit(1);
-            }
-        };
+    for pid in config.tids {
         let ts = client.pid_stats(pid).expect("get stats");
         stats.push(ts);
     }
 
-    let printer = Printer::new(header_format);
+    let printer = Printer::new(config.header_format);
 
     let mut show_line = true;
-    if matches.is_present("verbose") {
+    if config.verbose {
         printer
             .print_full(&mut io::stdout(), &stats)
             .expect("write stdout");
         show_line = false;
     }
-    if matches.is_present("show-delays") {
+    if config.show_delays {
         printer
             .print_delay_lines(&mut io::stdout(), &stats)
             .expect("write stdout");
