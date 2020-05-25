@@ -10,9 +10,9 @@ Usage
 =====
 
 ```rust
-use taskstats::{self, Delays, Client};
+use linux_taskstats::{self, Delays, Client};
 
-fn get_pid_delays(pid: u32) -> Result<Delays, taskstats::Error> {
+fn get_pid_delays(pid: u32) -> Result<Delays, linux_taskstats::Error> {
     let client = Client::open()?;
     let ts = client.pid_stats(pid)?;
     ts.delays
