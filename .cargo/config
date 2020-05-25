@@ -1,3 +1,0 @@
-[build]
-# This is only to make compilation and static analysis work on OSX
-target = "x86_64-unknown-linux-gnu"
