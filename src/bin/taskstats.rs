@@ -1,7 +1,7 @@
 use clap::{App, Arg};
+use linux_taskstats::cmd;
+use linux_taskstats::format::DefaultHeaderFormat;
 use std::process;
-use taskstats::cmd;
-use taskstats::format::DefaultHeaderFormat;
 
 fn main() {
     let matches = App::new("A command line interface to Linux taskstats")
