@@ -1,5 +1,6 @@
 [build]
 target-dir = "docker-build/target"
+rustflags = "--cfg test_priv"
 
 [source.crates-io]
 replace-with = "vendored-sources"
