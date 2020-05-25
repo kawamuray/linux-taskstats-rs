@@ -7,7 +7,7 @@ license = "MIT"
 description = "Rust interface to Linux taskstats"
 repository = "https://github.com/kawamuray/taskstats-rs"
 readme = "README.md"
-keywords = ["taskstats", "delay accounting"]
+keywords = ["taskstats", "delay-accounting"]
 exclude = [
     "tools/*",
     "example/*",
