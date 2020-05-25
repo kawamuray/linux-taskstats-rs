@@ -32,6 +32,7 @@ mod nlmsg {
     pub const fn align(len: usize) -> usize {
         (len + NLMSG_ALIGNTO as usize - 1) & !(NLMSG_ALIGNTO as usize - 1)
     }
+
     #[inline]
     pub fn is_valid(nlh: &libc::nlmsghdr, len: usize) -> bool {
         len >= mem::size_of::<libc::nlmsghdr>()
@@ -86,7 +87,7 @@ impl NlSocket for nl::Socket {
 }
 
 /// Netlink protocol implementation specifically for taskstats querying.
-pub struct Netlink<S: NlSocket> {
+pub struct Netlink<S: NlSocket = nl::Socket> {
     sock: S,
     remote_addr: S::Addr,
     mypid: u32,
@@ -178,14 +179,21 @@ impl<S: NlSocket> Netlink<S> {
             rep_len, msg.nlmsg_header.nlmsg_type, msg.nlmsg_header.nlmsg_len
         );
 
-        if msg.nlmsg_header.nlmsg_type == libc::NLMSG_ERROR as u16 {
-            return Err(Error::ErrorResponse);
-        }
         if !nlmsg::is_valid(&msg.nlmsg_header, rep_len) {
             return Err(Error::Protocol(format!(
                 "header len: {}, recv size: {}",
                 msg.nlmsg_header.nlmsg_len, rep_len
             )));
+        }
+        if msg.nlmsg_header.nlmsg_len as usize > mem::size_of::<GenNlMsg>() {
+            return Err(Error::Protocol(format!(
+                "too large message size: {}",
+                msg.nlmsg_header.nlmsg_len
+            )));
+        }
+
+        if msg.nlmsg_header.nlmsg_type == libc::NLMSG_ERROR as u16 {
+            return Err(Error::ErrorResponse);
         }
 
         Ok(msg)

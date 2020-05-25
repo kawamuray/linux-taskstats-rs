@@ -19,7 +19,6 @@ use c_headers::{
 use log::{debug, warn};
 use netlink::Netlink;
 use netlink::NlPayload;
-use netlink_sys as nl;
 use std::mem;
 use std::slice;
 use thiserror::Error;
@@ -42,7 +41,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 
 /// Interface to access kernel taskstats API through the netlink socket.
 pub struct Client {
-    netlink: Netlink<nl::Socket>,
+    netlink: Netlink,
     ts_family_id: u16,
 }
 
@@ -62,7 +61,7 @@ impl Client {
         })
     }
 
-    fn lookup_family_id(netlink: &Netlink<nl::Socket>) -> Result<u16> {
+    fn lookup_family_id(netlink: &Netlink) -> Result<u16> {
         netlink.send_cmd(
             libc::GENL_ID_CTRL as u16,
             libc::CTRL_CMD_GETFAMILY as u8,
