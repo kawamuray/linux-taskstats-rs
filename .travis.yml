@@ -2,5 +2,5 @@ language: rust
 rust:
   - stable
 before_install:
-  - sudo apt-get -y curl llvm-dev libclang-dev gcc
+  - sudo apt-get install -y curl llvm-dev libclang-dev gcc
 cache: cargo
