@@ -6,8 +6,7 @@ Rust interface to [Linux's taskstats](https://www.kernel.org/doc/Documentation/a
 This crate provides access to taskstats which is known as a way to access task's "delay" information a.k.a [Delay Accounting](https://www.kernel.org/doc/html/latest/accounting/delay-accounting.html).
 
 
-Usage
-=====
+# Usage
 
 ```rust
 use linux_taskstats::{self, Delays, Client};
@@ -19,8 +18,7 @@ fn get_pid_delays(pid: u32) -> Result<Delays, linux_taskstats::Error> {
 }
 ```
 
-How to build
-============
+# How to build
 
 ```sh
 cargo test
@@ -35,7 +33,6 @@ Or on platform other than linux:
 # The outputs will be created under docker-build/target
 ```
 
-License
-=======
+# License
 
 [MIT](./LICENSE)
