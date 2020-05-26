@@ -1,5 +1,5 @@
-taskstats-rs
-============
+linux-taskstats-rs
+==================
 
 Rust interface to [Linux's taskstats](https://www.kernel.org/doc/Documentation/accounting/taskstats.txt).
 
