@@ -2,11 +2,21 @@ language: rust
 rust:
 - stable
 before_install:
-- sudo apt-get install -y curl llvm-dev libclang-dev gcc
+- sudo apt-get install -y curl llvm-dev libclang-dev gcc musl-tools
 cache: cargo
+before_deploy:
+- .travis/build-musl-bin-dist.sh
 deploy:
-  provider: cargo
+- provider: cargo
   token:
     secure: OBLhWT/Ehma+HDgPM79pfP3rjbpsOqsl+UbWo3INIdR5T4Tm2PQjmE0+ay2cS0jOjLLpm9dNkrY7f4No85ZQSoNt6nHpAU4yresVdgVs73ci0ebZR4z9NVzGrj04FsRcV0y3dD2IUNHlmCFjLD8tWWISYtOctK/oMfGhoYfW4ZboZgDm1LUr8gI43gxfUpS1INFtMuomP3kDjQRhs+IgcZ1/m14aVV0JUgSA5KqV6MEIOjN0wtLPclTlMzXvplpfSuMAeCtXrcCGY74DoE/dD79aXu+99/SB5JcQs/hh2onfQ6Em3KPaLZDz+o7r8NsAYLmG3bmgTGQqCsJtYtVcWjvKGjOpU7PFxAc7fzAz/F8PqFJa2OOr62M6qnrI+s8OLIx7KJcoER43KGZWMRTc6H/O1Y/QBooVwHFaQkmDAf21SbMftTcdueKWvV5B5C08AKVU9xEoYpyXZZ7e9mjVZq1htWkYJrU2+Xs9SPxskvyiBtBc17U7BOjDxyOjC9VGXq0FE+ziYwHC+h3EzWIP2hKTTThRCiFra9bR58K0WrH+hgfpoe6ZmEGfUB3SXmCdZNA2adPR6G/2Z5AA86NGUHWbiICZClfTizMaWeugleWHiokNZQA+aVFReP6gpcgH4ptihP6d8lZPSqiIwEHZA2OJuwHaimqBLDnD0SAzurI=
+  on:
+    tags: true
+- provider: releases
+  api_key:
+    secure: XvA050loHv178cLAPElLVykPkUQjcuKp6W1mb2WarblTRAiRI/9QVqaxNxylAZDVCYPmki6gkl9CjYBoUvtM/wsbZKRpIsKSxHKhrmw3SIWf5Z+PXS6KNU+aTWGJLB4rFH2cWGV7787IdPNI6rs8Cx5YVKCjfPw/OSbj85lKiIyMmCaT19pbOn4598XsCqH6076paQURJkRTTxfP2H+zhWGGUKwK8vvlFoCjzFJf+PJEl844H0xhsvB1FMXwHK5p40iAUh+20robuRu1D/GfnDaw49xUNVF4qmyIovk017pjgM3yfRvTYaXDw+if9hahF6OLcvldc0AXTAfQmlI6donHVneBW1gX6PZOeugtD4IR4mB4IK0on9GfilQmDu5+UBucaUi0RGgA5qqQL2Rx5vM2/XJrKfG2ZYibqHEZ1ffjZUAQTpSMqRS136tMxn1CO05NkOVeLmmx6/We2rWS0WlFbBwOXPw1TVaDkEMYfnAYSGJ/V+jfUFuhbRLm6rY4BHnABTvPnMaxvq1ktmU5tc8VhMZPjBtEi45ADpQirbiyjFYkER7n8PuYf83YJ/dDERcZ3PnLWph2MH1Xh23YpsFwdyAcb8vti+GA2ogV4eVpEgfpu2mSKhD6PrzFUKfZw5Pj3X9BGKRqBDgDUFW1gwCoRmmZEBoHJEdceBMtR80=
+  file_glob: true
+  file: taskstats-*.gz
+  skip_cleanup: true
   on:
     tags: true
