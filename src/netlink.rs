@@ -1,7 +1,7 @@
 use crate::AsBuf;
 use libc;
 use log::debug;
-use netlink_sys::{self as nl, Protocol, Socket, SocketAddr};
+use netlink_sys::{self as nl, Socket, SocketAddr};
 use std::io;
 use std::mem;
 use std::process;
@@ -81,8 +81,8 @@ impl NlSocket for nl::Socket {
         self.send_to(buf, addr, 0)
     }
 
-    fn recv(&self, buf: &mut [u8]) -> io::Result<usize> {
-        self.recv(buf, 0)
+    fn recv(&self, mut buf: &mut [u8]) -> io::Result<usize> {
+        self.recv(&mut buf, 0)
     }
 }
 
@@ -95,7 +95,7 @@ pub struct Netlink<S: NlSocket = nl::Socket> {
 
 impl Netlink<nl::Socket> {
     pub fn open() -> Result<Netlink<nl::Socket>> {
-        let mut sock = Socket::new(Protocol::Generic)?;
+        let mut sock = Socket::new(nl::protocols::NETLINK_GENERIC)?;
         let addr = SocketAddr::new(0, 0);
         sock.bind(&addr)?;
         Ok(Netlink {

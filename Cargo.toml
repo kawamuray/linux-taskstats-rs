@@ -22,7 +22,7 @@ required-features = ["executable"]
 
 [dependencies]
 libc = "0.2"
-netlink-sys = "0.2"
+netlink-sys = "0.8.2"
 thiserror = "1.0.16"
 log = "0.4.8"
 env_logger = { version = "0.7.1", optional = true }
@@ -35,4 +35,4 @@ executable = ["env_logger", "clap", "format"]
 format = ["prettytable-rs"]
 
 [build-dependencies]
-bindgen = "0.53.1"
+bindgen = "0.59.2"
