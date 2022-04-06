@@ -1,6 +1,6 @@
 use linux_taskstats::format::{HeaderFormat, Printer};
 use linux_taskstats::Client;
-use env_logger;
+
 use std::io;
 
 pub struct Config<H: HeaderFormat> {

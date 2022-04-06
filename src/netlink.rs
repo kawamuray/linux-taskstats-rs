@@ -1,5 +1,5 @@
 use crate::AsBuf;
-use libc;
+
 use log::debug;
 use netlink_sys::{self as nl, Socket, SocketAddr};
 use std::io;
@@ -10,6 +10,7 @@ use thiserror::Error;
 
 const MAX_MESSAGE_SIZE: usize = 1024;
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("error in I/O with netlink socket: {0}")]
@@ -52,13 +53,13 @@ mod nla {
 
     #[inline]
     pub fn payload(na: &libc::nlattr) -> *const u8 {
-        unsafe { (na as *const libc::nlattr as *const u8).offset(HDRLEN as isize) }
+        unsafe { (na as *const libc::nlattr as *const u8).add(HDRLEN) }
     }
 
     #[inline]
     pub fn next(na: &libc::nlattr) -> &libc::nlattr {
         unsafe {
-            &*((na as *const libc::nlattr as *const u8).offset(align(na.nla_len as usize) as isize)
+            &*((na as *const libc::nlattr as *const u8).add(align(na.nla_len as usize))
                 as *const libc::nlattr)
         }
     }
@@ -136,7 +137,7 @@ impl<S: NlSocket> Netlink<S> {
             );
             std::ptr::copy_nonoverlapping(
                 nla_data.as_ptr() as *const u8,
-                bufp.offset(nla::HDRLEN as isize),
+                bufp.add(nla::HDRLEN),
                 nla_data.len(),
             );
         }
@@ -161,7 +162,7 @@ impl<S: NlSocket> Netlink<S> {
 
         let mut send_buf = &msg.as_buf()[..msg.nlmsg_header.nlmsg_len as usize];
         loop {
-            let sent_size = self.sock.send_to(&send_buf, &self.remote_addr)?;
+            let sent_size = self.sock.send_to(send_buf, &self.remote_addr)?;
             if sent_size == send_buf.len() {
                 break;
             }
@@ -264,7 +265,7 @@ impl<'a> Iterator for NlAttrs<'a> {
         if let Some(ret) = self.next.take() {
             self.rem_size -= nla::align(ret.nla_len as usize);
             if self.rem_size >= nla::HDRLEN {
-                let next = nla::next(&ret);
+                let next = nla::next(ret);
                 self.next.replace(next);
             }
             return Some(NlAttr { header: ret });
@@ -283,7 +284,7 @@ mod tests {
     const GENL_CMD: u8 = 3;
     const NLA_TYPE: u16 = 17;
     const PID: u32 = 1234;
-    const PAYLOAD: &'static str = "Hello";
+    const PAYLOAD: &str = "Hello";
 
     impl NlSocket for UdpSocket {
         type Addr = SocketAddr;
@@ -329,15 +330,12 @@ mod tests {
         assert_eq!(NLMSG_TYPE, n.nlmsg_type);
         assert_eq!(PID, n.nlmsg_pid);
 
-        let g = unsafe {
-            &*((&buf as *const u8).offset(nlmsg::HDRLEN as isize) as *const libc::genlmsghdr)
-        };
+        let g = unsafe { &*((&buf as *const u8).add(nlmsg::HDRLEN) as *const libc::genlmsghdr) };
         assert_eq!(GENL_CMD, g.cmd);
 
         let payload = unsafe {
             slice::from_raw_parts(
-                (&buf as *const u8)
-                    .offset((nlmsg::HDRLEN + nlmsg::GENL_HDRLEN + nla::HDRLEN) as isize),
+                (&buf as *const u8).add(nlmsg::HDRLEN + nlmsg::GENL_HDRLEN + nla::HDRLEN),
                 PAYLOAD.len(),
             )
         };
@@ -364,7 +362,7 @@ mod tests {
         unsafe {
             ptr::copy_nonoverlapping(
                 &n as *const libc::nlmsghdr as *const u8,
-                buf.as_mut_ptr().offset(pos as isize),
+                buf.as_mut_ptr().add(pos),
                 mem::size_of::<libc::nlmsghdr>(),
             );
         }
@@ -378,18 +376,14 @@ mod tests {
         unsafe {
             ptr::copy_nonoverlapping(
                 &g as *const libc::genlmsghdr as *const u8,
-                buf.as_mut_ptr().offset(pos as isize),
+                buf.as_mut_ptr().add(pos),
                 mem::size_of::<libc::genlmsghdr>(),
             );
         }
         pos += nlmsg::GENL_HDRLEN;
 
         unsafe {
-            ptr::copy_nonoverlapping(
-                PAYLOAD.as_ptr(),
-                buf.as_mut_ptr().offset(pos as isize),
-                PAYLOAD.len(),
-            );
+            ptr::copy_nonoverlapping(PAYLOAD.as_ptr(), buf.as_mut_ptr().add(pos), PAYLOAD.len());
         }
         pos += PAYLOAD.len();
 
@@ -425,14 +419,13 @@ mod tests {
         let mut buf = [0u8; 256];
 
         fn add_na<T>(buf: &mut [u8], pos: &mut usize, val: T) {
-            let header =
-                unsafe { &mut *(buf.as_mut_ptr().offset(*pos as isize) as *mut libc::nlattr) };
+            let header = unsafe { &mut *(buf.as_mut_ptr().add(*pos) as *mut libc::nlattr) };
             header.nla_type = 0;
             header.nla_len = nla::align(nla::HDRLEN + mem::size_of::<T>()) as u16;
             unsafe {
                 ptr::copy_nonoverlapping(
                     &val as *const T as *const u8,
-                    buf.as_mut_ptr().offset((*pos + nla::HDRLEN) as isize),
+                    buf.as_mut_ptr().add(*pos + nla::HDRLEN),
                     mem::size_of::<T>(),
                 )
             };
@@ -453,9 +446,9 @@ mod tests {
             header: unsafe { &*(buf.as_ptr() as *const libc::nlattr) },
         };
         let mut iter = outer.payload_as_nlattrs();
-        assert_eq!(Some('a' as u8), iter.next().map(|x| *x.payload_as()));
-        assert_eq!(Some('b' as u8), iter.next().map(|x| *x.payload_as()));
-        assert_eq!(Some('c' as u8), iter.next().map(|x| *x.payload_as()));
+        assert_eq!(Some(b'a'), iter.next().map(|x| *x.payload_as()));
+        assert_eq!(Some(b'b'), iter.next().map(|x| *x.payload_as()));
+        assert_eq!(Some(b'c'), iter.next().map(|x| *x.payload_as()));
         assert_eq!(None, iter.next().map(|x| *x.payload_as::<u8>()));
     }
 
@@ -478,8 +471,7 @@ mod tests {
         };
         let nlattr = NlAttr { header: &na };
         let p = nlattr.payload();
-        let expect_p =
-            unsafe { (&na as *const libc::nlattr as *const u8).offset(nla::HDRLEN as isize) };
+        let expect_p = unsafe { (&na as *const libc::nlattr as *const u8).add(nla::HDRLEN) };
         assert_eq!(expect_p, p.as_ptr());
         assert_eq!(nlmsg::align(LEN), p.len());
     }

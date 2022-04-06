@@ -1,4 +1,4 @@
-use clap::{Command, Arg};
+use clap::{Arg, Command};
 use linux_taskstats::format::DefaultHeaderFormat;
 use std::process;
 

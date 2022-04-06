@@ -6,11 +6,12 @@ pub trait HeaderFormat {
     fn format(&self, tid: u32) -> String;
 }
 
+#[derive(Default)]
 pub struct DefaultHeaderFormat {}
 
 impl DefaultHeaderFormat {
     pub fn new() -> Self {
-        Self {}
+        Default::default()
     }
 }
 
