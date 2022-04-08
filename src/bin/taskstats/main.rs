@@ -1,14 +1,14 @@
-use clap::{App, Arg};
+use clap::{Arg, Command};
 use linux_taskstats::format::DefaultHeaderFormat;
 use std::process;
 
 mod cmd;
 
 fn main() {
-    let matches = App::new("A command line interface to Linux taskstats")
-        .arg(Arg::with_name("verbose").short("v").long("verbose"))
-        .arg(Arg::with_name("show-delays").short("d").long("delay"))
-        .arg(Arg::with_name("TIDS").index(1).multiple(true))
+    let matches = Command::new("A command line interface to Linux taskstats")
+        .arg(Arg::new("verbose").short('v').long("verbose"))
+        .arg(Arg::new("show-delays").short('d').long("delay"))
+        .arg(Arg::new("TIDS").index(1).multiple_values(true))
         .get_matches();
 
     let tids: Vec<_> = matches
