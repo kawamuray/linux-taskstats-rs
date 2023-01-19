@@ -12,9 +12,9 @@ pub use model::*;
 
 pub use c_headers::taskstats as __bindgen_taskstats;
 use c_headers::{
-    __u16, __u32, __u64, __u8, TASKSTATS_CMD_ATTR_PID, TASKSTATS_CMD_GET, TASKSTATS_GENL_NAME,
-    TASKSTATS_TYPE_AGGR_PID, TASKSTATS_TYPE_NULL, TASKSTATS_TYPE_PID, TASKSTATS_TYPE_STATS,
-    TASKSTATS_TYPE_TGID,
+    __u16, __u32, __u64, __u8, TASKSTATS_CMD_ATTR_PID, TASKSTATS_CMD_ATTR_TGID, TASKSTATS_CMD_GET,
+    TASKSTATS_GENL_NAME, TASKSTATS_TYPE_AGGR_PID, TASKSTATS_TYPE_AGGR_TGID, TASKSTATS_TYPE_NULL,
+    TASKSTATS_TYPE_PID, TASKSTATS_TYPE_STATS, TASKSTATS_TYPE_TGID,
 };
 use log::{debug, warn};
 use netlink::Netlink;
@@ -79,10 +79,11 @@ impl Client {
         Err(Error::NoFamilyId)
     }
 
-    /// Obtain taskstats for given task ID
+    /// Obtain taskstats for given task ID (e.g. single thread of a multithreaded process)
     ///
     /// # Arguments
-    /// * `tid` - Kernel task ID (could be either pid for per-task pid a.k.a tid)
+    /// * `tid` - Kernel task ID ("pid", "tid" and "task" are used interchangeably and refer to the
+    ///   standard Linux task defined by struct task_struct)
     ///
     /// # Return
     /// * `TaskStats` storing the target task's stats
@@ -107,6 +108,51 @@ impl Client {
                     for inner in na.payload_as_nlattrs() {
                         match inner.header.nla_type as u32 {
                             TASKSTATS_TYPE_PID => debug!("Received TASKSTATS_TYPE_PID"),
+                            TASKSTATS_TYPE_TGID => warn!("Received TASKSTATS_TYPE_TGID"),
+                            TASKSTATS_TYPE_STATS => {
+                                return Ok(TaskStats::from(inner.payload()));
+                            }
+                            unknown => warn!("Skipping unknown nla_type: {}", unknown),
+                        }
+                    }
+                }
+                unknown => warn!("Skipping unknown nla_type: {}", unknown),
+            }
+        }
+        Err(Error::Unknown(
+            "no TASKSTATS_TYPE_STATS found in response".to_string(),
+        ))
+    }
+
+    /// Obtain taskstats for given thread group ID (e.g. cumulated statistics of a multithreaded process)
+    ///
+    /// # Arguments
+    /// * `tgid` - Kernel thread group ID ("tgid", "process" and "thread group" are used
+    ///   interchangeably and refer to the traditional Unix process)
+    ///
+    /// # Return
+    /// * `TaskStats` storing the target thread group's aggregated stats
+    ///
+    /// # Errors
+    /// * when netlink socket failed
+    /// * when kernel responded error
+    /// * when the returned data couldn't be interpreted
+    pub fn tgid_stats(&self, tgid: u32) -> Result<TaskStats> {
+        self.netlink.send_cmd(
+            self.ts_family_id,
+            TASKSTATS_CMD_GET as u8,
+            TASKSTATS_CMD_ATTR_TGID as u16,
+            tgid.as_buf(),
+        )?;
+
+        let resp = self.netlink.recv_response()?;
+        for na in resp.payload_as_nlattrs() {
+            match na.header.nla_type as u32 {
+                TASKSTATS_TYPE_NULL => break,
+                TASKSTATS_TYPE_AGGR_TGID => {
+                    for inner in na.payload_as_nlattrs() {
+                        match inner.header.nla_type as u32 {
+                            TASKSTATS_TYPE_PID => warn!("Received TASKSTATS_TYPE_PID"),
                             TASKSTATS_TYPE_TGID => debug!("Received TASKSTATS_TYPE_TGID"),
                             TASKSTATS_TYPE_STATS => {
                                 return Ok(TaskStats::from(inner.payload()));
