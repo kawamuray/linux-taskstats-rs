@@ -11,9 +11,15 @@ This crate provides access to taskstats which is known as a way to access task's
 ```rust
 use linux_taskstats::{self, Delays, Client};
 
-fn get_pid_delays(pid: u32) -> Result<Delays, linux_taskstats::Error> {
+fn get_thread_delays(pid: u32) -> Result<Delays, linux_taskstats::Error> {
     let client = Client::open()?;
     let ts = client.pid_stats(pid)?;
+    Ok(ts.delays)
+}
+
+fn get_process_delays(pid: u32) -> Result<Delays, linux_taskstats::Error> {
+    let client = Client::open()?;
+    let ts = client.tgid_stats(pid)?;
     Ok(ts.delays)
 }
 ```
