@@ -1,5 +1,5 @@
 use crate::TaskStats;
-use prettytable::{self as ptable, cell, row};
+use prettytable::{self as ptable, row};
 use std::io::{self, Write};
 
 pub trait HeaderFormat {
