@@ -35,4 +35,4 @@ executable = ["env_logger", "clap", "format"]
 format = ["prettytable-rs"]
 
 [build-dependencies]
-bindgen = "0.63.0"
+bindgen = "0.69.0"
