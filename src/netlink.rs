@@ -105,6 +105,14 @@ impl Netlink<nl::Socket> {
             mypid: process::id(),
         })
     }
+
+    pub fn set_rx_buf_sz<T>(&self, payload: T) -> Result<()> {
+        self.sock.set_rx_buf_sz(payload).map_err(|err| err.into())
+    }
+
+    pub fn get_rx_buf_sz(&self) -> Result<usize> {
+        self.sock.get_rx_buf_sz().map_err(|err| err.into())
+    }
 }
 
 impl<S: NlSocket> Netlink<S> {
