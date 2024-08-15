@@ -22,7 +22,7 @@ pub const TASKSTATS_SIZE: usize = const_max(
 /// There are more (but may not much interested) fields in the original
 /// `struct taskstats` and they are accessible through obtaining the original
 /// struct by `TaskStats#inner()`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct TaskStats {
     pub(crate) inner_buf: [u8; TASKSTATS_SIZE],
     /// The target task ID
