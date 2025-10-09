@@ -124,7 +124,8 @@ pub struct DelayStat {
 impl From<&[u8]> for TaskStats {
     fn from(buf: &[u8]) -> Self {
         let mut inner_buf = [0u8; TASKSTATS_SIZE];
-        inner_buf.copy_from_slice(&buf[..TASKSTATS_SIZE]);
+        let copy_len = buf.len().min(TASKSTATS_SIZE);
+        inner_buf[..copy_len].copy_from_slice(&buf[..copy_len]);
         let ts = unsafe { &*(inner_buf.as_ptr() as *const _ as *const taskstats) };
         TaskStats {
             tid: ts.ac_pid,
